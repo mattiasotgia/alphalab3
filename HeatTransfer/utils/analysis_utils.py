@@ -7,6 +7,9 @@ import mplhep as hep
 from iminuit import Minuit
 from iminuit.cost import LeastSquares
 
+from scipy import stats
+from uncertainties import ufloat
+
 from .data_utils import Data
 
 @dataclass
@@ -15,15 +18,22 @@ class AnalysisData():
     T_TC: np.ndarray
     T_PT100: np.ndarray
     error_TC: float
+    ID: int
     
-    def __init__(self, time, T_TC, T_PT100, error_TC, name):
+    def __init__(self, time, T_TC, T_PT100, error_TC, name, ID = None):
         self.time = time
         self.T_TC = T_TC
         self.T_PT100 = T_PT100
         self.error_TC = error_TC
         self.name = name
+        self.ID = ID
 
 
+def print_results(value, error, M, data):
+    print(f'┌─────────────────────────────────────────────────────────────────────────\
+    \n│ D = {ufloat(value, error):.uS} m^2/s \tfor {data.name} (D{data.ID})\
+    \n│ (p-value: {1 - stats.chi2.cdf(M.fmin.fval, M.ndof)}, χ2/df = {M.fval, M.ndof})\n')
+        
 class Analysis():
     bar_lenght: float = 63e-3
     TC_position: float = 21e-3
@@ -31,6 +41,10 @@ class Analysis():
     error: float = 0
     data = None
     
+    ## Miscellanea plot styling
+    markersize = 2
+    
+    ###############################################
     def __init__(self, data: Data, cut: float = 5):
         self.gain = 2000
         
@@ -59,7 +73,7 @@ class Analysis():
         
         T_TC = - (T_TC - self.offset) ##> Correzione: senso fisico mancante
         
-        self.data = AnalysisData(data.time, T_TC, T_PT100, error, data.name)
+        self.data = AnalysisData(data.time, T_TC, T_PT100, error, data.name, data.ID)
 
     
     def filter(self, min_time: float = 0, max_time: float = 120):
@@ -77,7 +91,8 @@ class Analysis():
             data.T_TC[low_index:hi_index],
             data.T_PT100[low_index:hi_index],
             data.error_TC,
-            data.name
+            data.name,
+            data.ID
         )
         
         return self
@@ -90,7 +105,9 @@ class Analysis():
         signal_error = 1/self.data.T_TC * self.data.error_TC
         
         plt.errorbar(inverted_time, linearized_temperature, signal_error, None, 'ko', 
-                     markersize=1.5, label=f'(TC) {self.data.name}')
+                     markersize=self.markersize, 
+                     # label=f'(TC) {self.data.name}'
+                    )
         plt.xlabel(r'$1/t$ (s$^{-1}$)')
         plt.ylabel(r'$\log(\sqrt{t}\cdot T_\mathrm{TC})$')
         
@@ -106,9 +123,13 @@ class Analysis():
         LSmodel = LeastSquares(x, y, signal_error, model)
         M1 = Minuit(LSmodel, α=coefficient, β=offset)
         M1.migrad()
-        plt.plot(x, model(x, *M1.values))
         D = - self.TC_position**2 / (4 * M1.values['α'])
         err_D = self.TC_position**2 / (4 * M1.values['α']**2) * M1.errors['α']
+        
+        print_results(D, err_D, M1, self.data)
+        
+        plt.plot(x, model(x, *M1.values), 
+                 label=f'D$_{{({self.data.ID})}}$ = ${ufloat(D, err_D):.uSL}$ m$^2$/s')
         
         return D, err_D, M1
     
@@ -126,7 +147,9 @@ class Analysis():
         plt.xlabel('Time (s)')
         plt.ylabel('Temperature (K)')
     
-    def full_model_fit(self, fit_limits = (5, 30), D: float = 1e-6, C: float = 50, offset: float = 0):
+    def full_model_fit(self, fit_limits = (5, 30), 
+                       D: float = 1e-6, C: float = 50, 
+                       offset: float = 0):
         
         def model(t, D, C, offset):
             model = C/np.sqrt(D * t) * np.exp(- self.TC_position**2 / (4 * D * t)) + offset
@@ -142,9 +165,10 @@ class Analysis():
         time = self.data.time
         T = self.data.T_TC
         σ_T = self.data.error_TC
-        
         plt.errorbar(time, T, σ_T, None, 'ko', 
-                     markersize=1.5, label=f'(TC) {self.data.name}')
+                     markersize=self.markersize, 
+                     # label=f'(TC) {self.data.name}'
+                    )
         plt.xlabel('Time (s)')
         plt.ylabel('Temperature (K)')
         
@@ -155,9 +179,12 @@ class Analysis():
         LSmodel = LeastSquares(t_fit, T_fit, σ_T, model)
         M1 = Minuit(LSmodel, D=D, C=C, offset=offset)
         M1.migrad()
-        plt.plot(t_fit, model(t_fit, *M1.values), zorder=100)
+        D, err_D = M1.values['D'], M1.errors['D']
         
-        # print(M1)
+        print_results(D, err_D, M1, self.data)
         
-        return M1.values['D'], M1.errors['D'], M1
+        plt.plot(t_fit, model(t_fit, *M1.values), zorder=100, 
+                 label=f'D$_{{({self.data.ID})}}$ = ${ufloat(D, err_D):.uSL}$ m$^2$/s')
+        
+        return D, err_D, M1
         
