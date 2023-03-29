@@ -21,7 +21,7 @@ class Data:
         self.freq_sampling = 1/(self.time[1]-self.time[0])
         self.samples = len(self.time)
         self.name = f'samples/freq./pulse dur.: \
-        {self.samples}/{self.freq_sampling:.1f}Hz/{self.pulse_duration:.1f}s'
+{self.samples}/{self.freq_sampling:.1f}Hz/{self.pulse_duration:.1f}s'
         self.ID = ID
     
     def __str__(self):

@@ -1,34 +1,39 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import mplhep as hep
 
-from .analysis_utils import AnalysisData
 from uncertainties import ufloat
 
 from dataclasses import dataclass
-
 from tqdm import tqdm
 
-
+from .analysis_utils import AnalysisData
 
 class Simulation:
-    time: float
+    max_time: float
     time_samples: int
+    time: np.ndarray
+    
     bar_lenght: float
     bar_samples: int
     
     delta_lenght: float = 0
     delta_time: float = 0
     
-    time_array: np.ndarray
     TC_data_array: np.ndarray
     
     D: float = 9.85e-5
     eta: float
     TC_position: float = 21e-3
-    TC_position_index: int
+    TC_position_idx: int
     
-    def __init__(self, time=50, time_samples: int=50_000, 
+    simulated_data: AnalysisData
+    
+    ID = 'Simulation'
+    name: str
+    
+    def __init__(self, max_time=50, time_samples: int=50_000, 
                  bar_lenght=63e-3, bar_samples=100, 
                  D=None):
         '''Simulation()
@@ -47,12 +52,57 @@ class Simulation:
         '''
         
         if D is not None: self.D = D
-        self.time = time
+        self.max_time = max_time
         self.time_samples = time_samples
-        self.bar_samples = bar_samples
-        self.delta_time = self.time / time_samples
-        self.delta_lenght = self.bar_lenght / bar_samples
+        self.time = np.linspace(0, max_time, time_samples)
+        self.delta_time = self.time[1]-self.time[0]
         
+        self.bar_samples = bar_samples
+        self.bar_lenght = bar_lenght
+        self.TC_data_array = np.linspace(0, bar_lenght, bar_samples)
+        self.delta_lenght = self.TC_data_array[1]-self.TC_data_array[0]
+        
+        self.TC_position_idx = self.TC_position * self.bar_samples / self.bar_lenght
         
         self.eta = self.D * self.delta_time / self.delta_lenght**2
         if self.eta > 0.5: raise Warning(f'eta {self.eta}>0.5, simulation may diverge')
+        
+        self.name = f'bar samples/time samples/time freq./sim. time: \
+{self.bar_samples}/{self.time_samples}/{1/self.delta_time:.1f}Hz/{self.max_time}s'
+        
+        self.simulated_data = AnalysisData(
+            self.time,
+            np.ones_like(self.time),
+            np.zeros_like(self.time),
+            0,
+            self.name,
+            self.ID
+        )
+    
+    def __str__(self):
+        return self.name
+    
+    def plot(self, time_limits: tuple = None):
+        
+        plt.figure()
+        data = self.simulated_data
+             
+        plt.plot(data.time, data.T_TC, label=self.name)
+        plt.xlabel('Time (s)')
+        if time_limits is not None:
+            plt.xlim(*time_limits)
+        plt.ylabel('Thermocouple Temperature (K)')
+        hep.label.exp_text('L3 ', 'Simulation')
+        plt.legend()
+    
+    def simulate(self):
+        '''Does simulation
+        
+        Return: ~utils.AnalysisData
+            The simulated data package (T_PT100 channel is used as event control).
+            Error is None (0)
+        '''
+        return self.simulated_data
+    
+    
+    
