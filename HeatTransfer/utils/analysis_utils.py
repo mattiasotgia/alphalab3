@@ -143,9 +143,11 @@ class Analysis():
             temp = data.T_PT100
         else: raise Exception('which in [TC, PT100]')
         
+        plt.figure()
         plt.plot(data.time, temp, label=f'({which}) {data.name}')
         plt.xlabel('Time (s)')
-        plt.ylabel('Temperature (K)')
+        plt.ylabel(f'Temperature$-{ufloat(self.offset, self.data.error_TC):.uS}$ (K)')
+        hep.label.exp_text('L3 ','Analysis')
     
     def full_model_fit(self, fit_limits = (5, 30), 
                        D: float = 1e-6, C: float = 50, 
