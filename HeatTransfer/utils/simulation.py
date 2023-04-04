@@ -30,7 +30,7 @@ class Simulation:
     
     simulated_data: AnalysisData
     
-    ID = 'Simulation'
+    ID = 'Fake data'
     name: str
     
     def __init__(self, max_time=50, time_samples: int=50_000, 
@@ -67,7 +67,7 @@ class Simulation:
         self.eta = self.D * self.delta_time / self.delta_lenght**2
         if self.eta > 0.5: raise Warning(f'eta {self.eta}>0.5, simulation may diverge')
         
-        self.name = f'bar samples/time samples/time freq./sim. time: \
+        self.name = f'samples/t. samples/t. freq./sim. time: \
 {self.bar_samples}/{self.time_samples}/{1/self.delta_time:.1f}Hz/{self.max_time}s'
         
         self.simulated_data = AnalysisData(
@@ -86,22 +86,35 @@ class Simulation:
         
         plt.figure()
         data = self.simulated_data
-             
-        plt.plot(data.time, data.T_TC, label=self.name)
+        
+        TC = None
+        if self.ID == 'Simulation':
+            TC = self.simulated_data.T_TC
+        else:
+            TC = 1/np.sqrt(self.D * data.time) * np.exp(
+                - self.TC_position**2 / (4 * self.D * data.time)
+            )
+        
+        plt.plot(data.time, TC, label=self.name)
         plt.xlabel('Time (s)')
         if time_limits is not None:
             plt.xlim(*time_limits)
         plt.ylabel('Thermocouple Temperature (K)')
-        hep.label.exp_text('L3 ', 'Simulation')
+        hep.label.exp_text('L3 ', self.ID)
         plt.legend()
     
     def simulate(self):
+        success = False ##> boolean return fake data to plot if fails
         '''Does simulation
         
         Return: ~utils.AnalysisData
             The simulated data package (T_PT100 channel is used as event control).
             Error is None (0)
         '''
+        
+        if success:
+            self.ID = 'Simulation'
+
         return self.simulated_data
     
     
