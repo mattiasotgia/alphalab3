@@ -1,0 +1,4 @@
+Operazioni per aprire browser su WSL:
+
+1)Assicurarsi che sia aperto "X-config";
+2)Dal terminale digitare "xdg-open https://www.google.com" oppure "xdg-open https://www.firefox.com"
