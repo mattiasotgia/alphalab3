@@ -9,6 +9,7 @@ from iminuit.cost import LeastSquares
 
 from scipy import stats
 from uncertainties import ufloat
+from jacobi import propagate
 
 from .data_utils import Data
 
@@ -115,21 +116,27 @@ class Analysis():
     
     def linearized_model_fit(self, coefficient: float=1, offset: float=0):
         
-        def model(x, α, β):
+        def model(x, p):
+            α, β = p
             return x * α + β
         
         x, y, signal_error = self.plot_linearized()
         
         LSmodel = LeastSquares(x, y, signal_error, model)
-        M1 = Minuit(LSmodel, α=coefficient, β=offset)
+        M1 = Minuit(LSmodel, (coefficient, offset))
         M1.migrad()
-        D = - self.TC_position**2 / (4 * M1.values['α'])
-        err_D = self.TC_position**2 / (4 * M1.values['α']**2) * M1.errors['α']
+        D = - self.TC_position**2 / (4 * M1.values[0])
+        err_D = self.TC_position**2 / (4 * M1.values[0]**2) * M1.errors[0]
         
         print_results(D, err_D, M1, self.data)
         
-        plt.plot(x, model(x, *M1.values), 
+        y, ycov = propagate(lambda p: model(x, p), M1.values, M1.covariance)
+        yerr_prop = np.diag(ycov) ** 0.5
+        
+        plt.plot(x, model(x, M1.values), 
                  label=f'D$_{{({self.data.ID})}}$ = ${ufloat(D, err_D):.uSL}$ m$^2$/s')
+        plt.fill_between(x, y+yerr_prop, y-yerr_prop, facecolor='gray', alpha=0.75)
+        plt.fill_between(x, y+2*yerr_prop, y-2*yerr_prop, facecolor='gray', alpha=0.25)
         
         return D, err_D, M1
     
@@ -153,7 +160,8 @@ class Analysis():
                        D: float = 1e-6, C: float = 50, 
                        offset: float = 0):
         
-        def model(t, D, C, offset):
+        def model(t, p):
+            D, C, offset = p
             model = C/np.sqrt(D * t) * np.exp(- self.TC_position**2 / (4 * D * t)) + offset
             t0 = self.data.time[0]
             idx_tfn = np.where(self.data.time == t0 + 3)[0][0]
@@ -179,14 +187,19 @@ class Analysis():
         T_fit = filtered.data.T_TC
         
         LSmodel = LeastSquares(t_fit, T_fit, σ_T, model)
-        M1 = Minuit(LSmodel, D=D, C=C, offset=offset)
+        M1 = Minuit(LSmodel, (D, C, offset))
         M1.migrad()
-        D, err_D = M1.values['D'], M1.errors['D']
+        D, err_D = M1.values[0], M1.errors[0]
         
         print_results(D, err_D, M1, self.data)
+        y, ycov = propagate(lambda p: model(t_fit, p), M1.values, M1.covariance)
+        yerr_prop = np.diag(ycov)**0.5
         
-        plt.plot(t_fit, model(t_fit, *M1.values), zorder=100, 
+        plt.plot(t_fit, model(t_fit, M1.values), zorder=100, 
                  label=f'D$_{{({self.data.ID})}}$ = ${ufloat(D, err_D):.uSL}$ m$^2$/s')
+        
+        plt.fill_between(t_fit, y+yerr_prop, y-yerr_prop, facecolor='gray', alpha=0.75)
+        plt.fill_between(t_fit, y+2*yerr_prop, y-2*yerr_prop, facecolor='gray', alpha=0.25)
         
         return D, err_D, M1
         
