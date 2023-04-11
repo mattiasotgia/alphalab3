@@ -123,6 +123,7 @@ class Analysis():
         x, y, signal_error = self.plot_linearized()
         
         LSmodel = LeastSquares(x, y, signal_error, model)
+        LSmodel.loss = 'soft_l1'
         M1 = Minuit(LSmodel, (coefficient, offset))
         M1.migrad()
         D = - self.TC_position**2 / (4 * M1.values[0])
