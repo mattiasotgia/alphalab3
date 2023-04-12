@@ -35,9 +35,9 @@ class MetaData:
         RC1 = self.receiver_1
         RC2 = self.receiver_2
         
-        SRCax.plot(time, SRC)
-        RC1ax.plot(time, RC1)
-        RC2ax.plot(time, RC2)
+        SRCax.step(time, SRC)
+        RC1ax.step(time, RC1)
+        RC2ax.step(time, RC2)
         SRCax.set_ylabel(f'{self.__ylabel} source')
         RC1ax.set_ylabel(f'{self.__ylabel} rec. 1')
         RC2ax.set_ylabel(f'{self.__ylabel} rec. 2')
