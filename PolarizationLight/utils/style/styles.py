@@ -44,9 +44,9 @@ _base = {
     "axes.labelcolor": "#000000",
     "axes.formatter.limits": "-2, 4",
     "axes.formatter.use_mathtext": True,
-    "axes.autolimit_mode": "round_numbers",
+    ## "axes.autolimit_mode": "round_numbers",
     "axes.unicode_minus": False,
-    "axes.xmargin": 0.0,
+    ## "axes.xmargin": 0.0,
     # x/y axis label locations
     ## "xaxis.labellocation": "right",
     ## "yaxis.labellocation": "top",
