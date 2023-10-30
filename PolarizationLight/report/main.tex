@@ -1,0 +1,39 @@
+% !TEX TS-program = pdflatexmk
+\documentclass[aps,twocolumn,prb,showpacs,floatfix,amsmath,amssymb,superscriptaddress, preprintnumbers, altaffilletter, amsmath, amssymb]{revtex4-1}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\makeatletter
+\let\it@comma@def\active@comma
+\makeatother
+\usepackage{physics}
+\usepackage[round-mode = uncertainty]{siunitx}
+\usepackage{graphicx}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks,allcolors=NavyBlue]{hyperref}
+
+\def\bibsection{\section*{\refname}}
+
+\begin{document}
+\title{Misura della polarizzazione della luce con amplificatore \emph{lock-in}}
+\author{Francesco Polleri}
+\email{s5025011@studenti.unige.it}
+\author{Mattia Sotgia}
+\email{s4942225@studenti.unige.it}
+\affiliation{Dipartimento di Fisica, Università degli Studi di Genova, Genova, Italia}
+\date{\today}
+
+\begin{abstract}
+Presentiamo lo studio della polarizzazione di un fascio di luce inizialmente non polarizzata, descrivendo un setup che ne permetta la generazione e l'acquisizione, la polarizzazione, verificando che esista una correlazione tra l'intensità del fascio luminoso e l'angolo tra il piano di polarizzazione della luce e il piano di polarizzazione dell'osservatore, come $I=I_0\cos^2\theta$. Possiamo quindi analizzare l'effetto di materiali rifrangenti, per i quali l'effetto della radiazione che lo attraversa corrisponde alla rotazione del piano di polarizzazione della luce. Verifichiamo infine che esiste una correlazione tra l'angolo di rotazione del piano di polarizzazione della luce e al composizione chimica del mezzo attraversato.
+\end{abstract}
+
+\maketitle
+
+\paragraph*{Introduzione} L'utilizzo di un sistema sensibile allo sfasamento, come un amplificatore lock-in, può risultare molto comodo in applicazioni di misura in cui si fa utilizzo di segnali luminosi. In questo modo è infatti possibile ridurre sufficentemente i disturbi e le interferenze prodotte dal rumore esterno, che in un ambiente di laboratorio possono essere molteplici, e inoltre permette anche di controllare e ridurre anche fonti di rumore che sono invece causate dal sistema stesso, come possono essere problemi di sovrariscaldamento e quindi variazione dell'intensità di emissione del fotodiodo, oppure effetti di carattere aleatorio in acquisizione dul fototransitor. Considerando allora un sistema che permette di generare e di acquisire con una fase definita, possiamo infatti ridurre molti di questi contributi di rumore, e quindi incrementare il rapporto tra segnale e rumore (SNR). 
+
+
+
+
+\appendix
+\end{document}
